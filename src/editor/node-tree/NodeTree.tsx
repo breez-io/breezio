@@ -4,6 +4,7 @@ import VirtualList from '../../ui/component/Virtual';
 import {ClientConn} from '../../core/client';
 import {DataMap} from '../../core/util/DataTypes';
 import {NodeTreeItem, NodeTreeRenderer} from './NodeRenderer';
+import {ListRowProps} from 'react-virtualized';
 
 interface Props {
   conn: ClientConn;
@@ -16,9 +17,10 @@ export class NodeTree extends React.PureComponent<Props, any> {
   rootList: NodeTreeItem[] = [];
   list: NodeTreeItem[] = [];
 
-  renderChild = (idx: number, style: React.CSSProperties) => {
-    const item = this.list[idx];
-    return <NodeTreeRenderer item={item} key={item.key} style={style} />;
+  renderChild = (option: ListRowProps) => {
+    let {index, key, style} = option;
+    const item = this.list[index];
+    return <NodeTreeRenderer item={item} key={key} style={style} />;
   };
 
   forceUpdateLambda = () => this.forceUpdate();

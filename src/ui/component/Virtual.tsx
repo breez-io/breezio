@@ -1,23 +1,24 @@
 import React from 'react';
 import ResizeObserver from 'resize-observer-polyfill';
+import {List, ListRowRenderer} from 'react-virtualized';
 
 interface Props {
   itemCount: number;
   itemHeight: number;
-  renderer: (idx: number, style: React.CSSProperties) => React.ReactNode;
+  renderer: ListRowRenderer;
   className?: string;
   style?: React.CSSProperties;
 }
 
 interface State {
-  offset: number;
+  width: number;
   height: number;
 }
 
 export default class VirtualList extends React.Component<Props, State> {
   static defaultProps = {};
 
-  state = {offset: 0, height: 0};
+  state = {width: 0, height: 0};
   resizeObserver: any;
 
   private rootNode!: HTMLElement;
@@ -26,13 +27,10 @@ export default class VirtualList extends React.Component<Props, State> {
   };
 
   componentDidMount() {
-    this.rootNode.addEventListener('scroll', this.handleScroll, {
-      passive: true
-    });
-
     this.resizeObserver = new ResizeObserver((resizes: any) => {
       this.setState({
-        height: this.rootNode.clientHeight
+        height: this.rootNode.clientHeight,
+        width: this.rootNode.clientWidth
       });
     });
     this.resizeObserver.observe(this.rootNode);
@@ -42,52 +40,26 @@ export default class VirtualList extends React.Component<Props, State> {
     if (this.resizeObserver) {
       this.resizeObserver.disconnect();
     }
-    this.rootNode.removeEventListener('scroll', this.handleScroll);
   }
 
   render() {
     const {itemCount, itemHeight, renderer, className, style} = this.props;
-    const {height, offset} = this.state;
+    const {width, height} = this.state;
+    const {padding, ...parentStyle} = style;
 
-    if (this.state.height > 0 && itemCount > 0) {
-      let contentHeight = itemCount * itemHeight;
-      let start = Math.floor(offset / itemHeight);
-      let end = Math.ceil((offset + height) / itemHeight);
-      if (end > itemCount) {
-        end = itemCount;
-      }
-      let children: React.ReactNode[] = [];
-      let paddingTop = '';
-      if (end > start) {
-        let heightStyle = `${itemHeight}px`;
-        for (let i = start; i < end; ++i) {
-          children.push(renderer(i, {height: heightStyle}));
-        }
-        paddingTop = `${start * itemHeight}px`;
-      }
-
-      return (
-        <div ref={this.getRef} className={`ticl-v-scroll ${className}`} style={style}>
-          <div className="ticl-v-scroll-content" style={{height: `${contentHeight}px`, paddingTop}}>
-            {children}
-          </div>
-        </div>
-      );
-    } else {
-      // not mounted or not visible, create dummy div to measure size
-      return <div ref={this.getRef} className={`ticl-v-scroll ${className}`} style={style}></div>;
-    }
+    return (
+      <div ref={this.getRef} className={className} style={parentStyle}>
+        <List
+          className="ticl-v-scroll"
+          width={width}
+          height={height}
+          rowCount={itemCount}
+          rowHeight={itemHeight}
+          rowRenderer={renderer}
+          tabIndex={-1}
+          style={{padding}}
+        />
+      </div>
+    );
   }
-
-  handleScroll = (event: UIEvent) => {
-    const offset = this.rootNode.scrollTop;
-
-    if (offset < 0 || this.state.offset === offset || event.target !== this.rootNode) {
-      return;
-    }
-
-    this.setState({
-      offset
-    });
-  };
 }

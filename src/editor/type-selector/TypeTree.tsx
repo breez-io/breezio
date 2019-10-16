@@ -4,6 +4,7 @@ import {TypeTreeItem, TypeTreeRoot} from './TypeTreeItem';
 import VirtualList from '../../ui/component/Virtual';
 import {TypeTreeRenderer} from './TypeTreeRenderer';
 import {OnTypeClick} from './TypeView';
+import {ListRowProps} from 'react-virtualized';
 
 interface Props {
   conn: ClientConn;
@@ -38,9 +39,10 @@ export class TypeTree extends React.PureComponent<Props, State> {
     }
   };
 
-  renderChild = (idx: number, style: React.CSSProperties) => {
-    let item = this.list[idx];
-    return <TypeTreeRenderer item={item} key={item.key} style={style} />;
+  renderChild = (option: ListRowProps) => {
+    let {index, key, style} = option;
+    let item = this.list[index];
+    return <TypeTreeRenderer item={item} key={key} style={style} />;
   };
 
   refreshList() {
